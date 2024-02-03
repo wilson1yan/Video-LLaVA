@@ -1,7 +1,8 @@
 
 
 CKPT_NAME="Video-LLaVA-7B"
-model_path="checkpoints/${CKPT_NAME}"
+model_path="/mnt/disks/disk-1/checkpoints/converted/${CKPT_NAME}"
+
 cache_dir="./cache_dir"
 GPT_Zero_Shot_QA="eval/GPT_Zero_Shot_QA"
 video_dir="${GPT_Zero_Shot_QA}/MSVD_Zero_Shot_QA/videos"

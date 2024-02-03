@@ -357,9 +357,19 @@ conv_llava_v1_mmtag = Conversation(
     version="v1_mmtag",
 )
 
+conv_lvm= Conversation(
+    system="You are a helpful assistant. ",
+    roles=("USER", "ASSISTANT"),
+    messages=(),
+    offset=0,
+    sep_style=SeparatorStyle.TWO,
+    sep=" ",
+    sep2="</s>",
+)
+
 default_conversation = conv_vicuna_v1
 conv_templates = {
-    "default": conv_vicuna_v0,
+    "default": conv_lvm,
     "v0": conv_vicuna_v0,
     "v1": conv_vicuna_v1,
     "vicuna_v1": conv_vicuna_v1,
@@ -374,6 +384,8 @@ conv_templates = {
     "llava_llama_2": conv_llava_llama_2,
 
     "mpt": conv_mpt,
+
+    "lvm": conv_lvm,
 }
 
 

@@ -4,7 +4,7 @@ import base64
 
 import torch
 from transformers import StoppingCriteria
-from videollava.constants import IMAGE_TOKEN_INDEX
+from videollava.constants import IMAGE_TOKEN_INDEX, VIDEO_TOKEN_INDEX
 
 
 def load_image_from_base64(image):
@@ -40,8 +40,9 @@ def process_images(images, image_processor, model_cfg):
     return new_images
 
 
-def tokenizer_image_token(prompt, tokenizer, image_token_index=IMAGE_TOKEN_INDEX, return_tensors=None):
-    prompt_chunks = [tokenizer(chunk).input_ids for chunk in prompt.split('<image>')]
+def tokenizer_video_token(prompt, tokenizer, video_token_idx=VIDEO_TOKEN_INDEX, return_tensors=None):
+    prompt_chunks = [tokenizer(chunk).input_ids for chunk in prompt.split('<video>')]
+    prompt_chunks = [input_ids[1:] if i > 0 else input_ids for i, input_ids in enumerate(prompt_chunks)]
 
     def insert_separator(X, sep):
         return [ele for sublist in zip(X, [sep]*len(X)) for ele in sublist][:-1]
@@ -52,7 +53,7 @@ def tokenizer_image_token(prompt, tokenizer, image_token_index=IMAGE_TOKEN_INDEX
         offset = 1
         input_ids.append(prompt_chunks[0][0])
 
-    for x in insert_separator(prompt_chunks, [image_token_index] * (offset + 1)):
+    for x in insert_separator(prompt_chunks, [video_token_index] * (offset + 1)):
         input_ids.extend(x[offset:])
 
     if return_tensors is not None:

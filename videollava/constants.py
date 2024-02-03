@@ -14,6 +14,7 @@ DEFAULT_IM_END_TOKEN = "<im_end>"
 IMAGE_PLACEHOLDER = "<image-placeholder>"
 
 # ======================================================================================================
+VIDEO_TOKEN_INDEX = -200
 DEFAULT_VIDEO_TOKEN = "<video>"
 DEFAULT_VIDEO_PATCH_TOKEN = "<im_patch>"
 DEFAULT_VID_START_TOKEN = "<vid_start>"
