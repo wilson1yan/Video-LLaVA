@@ -11,7 +11,6 @@ from videollava.constants import DEFAULT_VIDEO_TOKEN, VIDEO_TOKEN_INDEX
 from videollava.mm_utils import get_model_name_from_path, tokenizer_video_token, KeywordsStoppingCriteria
 from videollava.model.builder import load_pretrained_model
 from videollava.model.language_model.llava_llama import LlavaLlamaForCausalLM
-from videollava.train.train import smart_tokenizer_and_embedding_resize
 
 
 def split_list(lst, n):
@@ -51,7 +50,8 @@ def get_model_output(model, video_processor, tokenizer, video, qs, args):
     #    qs = DEFAULT_X_START_TOKEN['VIDEO'] + ''.join([DEFAULT_IMAGE_TOKEN]*8) + DEFAULT_X_END_TOKEN['VIDEO'] + '\n' + qs
     #else:
     #qs = ''.join([DEFAULT_IMAGE_TOKEN]*8) + '\n' + qs
-    qs = ''.join(DEFAULT_VIDEO_TOKEN) + '\n' + qs
+    #qs = ''.join(DEFAULT_VIDEO_TOKEN) + '\n' + qs
+    qs = f"{qs}\n{DEFAULT_VIDEO_TOKEN}"
 
     conv_mode = "lvm"
     args.conv_mode = conv_mode
@@ -60,9 +60,10 @@ def get_model_output(model, video_processor, tokenizer, video, qs, args):
     conv.append_message(conv.roles[0], qs)
     conv.append_message(conv.roles[1], None)
     prompt = conv.get_prompt()
+    #print(prompt)
 
 
-    video_tensor = video_processor([video])['pixel_values'][0].half().to(args.device)
+    video_tensor = video_processor([video], 8)['pixel_values'][0].half().to(args.device)
     input_ids = tokenizer_video_token(prompt, tokenizer, VIDEO_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).to(args.device)
 
     stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
@@ -146,7 +147,7 @@ def run_inference(args):
                 video_path = temp_path
                 # try:
                 # Run inference on the video and add the output to the list
-                output = get_model_output(model, processor['video'], tokenizer, video_path, question, args)
+                output = get_model_output(model, processor, tokenizer, video_path, question, args)
                 sample_set['pred'] = output
                 output_list.append(sample_set)
                 # except Exception as e:

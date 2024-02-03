@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple, Union
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -50,9 +51,9 @@ class LongVisionMetaForCausalLM(ABC):
                 vc = vc.tolist()
                 new_video_codes.extend(vc)
                 if i == len(video_codes) - 1:
-                    new_video_codes.append(EOV_TOKEN)
+                    new_video_codes.append(EOV_TOKEN_INDEX)
                 else:
-                    new_video_codes.append(EOF_TOKEN)
+                    new_video_codes.append(EOF_TOKEN_INDEX)
             new_video_codes = torch.LongTensor(np.array(new_video_codes, dtype=np.int32)).to(device)
             video_feat = self.model.vision_embed_tokens(new_video_codes)
             video_features.append(video_feat)

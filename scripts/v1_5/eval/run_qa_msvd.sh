@@ -1,6 +1,7 @@
 
 
-CKPT_NAME="Video-LLaVA-7B"
+CKPT_NAME="7b-vision-chat-ft-8k-v2-valley-videoinstruct-2"
+CKPT_NAME="7b-vision-chat-ft-32k-v2-1"
 model_path="/mnt/disks/disk-1/checkpoints/converted/${CKPT_NAME}"
 
 cache_dir="./cache_dir"
@@ -27,7 +28,7 @@ for IDX in $(seq 0 $((CHUNKS-1))); do
       --output_dir ${output_dir} \
       --output_name ${CHUNKS}_${IDX} \
       --num_chunks $CHUNKS \
-      --chunk_idx $IDX &
+      --chunk_idx $IDX
 done
 
 wait

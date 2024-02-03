@@ -23,6 +23,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAn
 import torch
 from torchvision.transforms import Compose, Lambda, ToTensor
 from torchvision.transforms._transforms_video import NormalizeVideo, RandomCropVideo, RandomHorizontalFlipVideo, CenterCropVideo
+from pytorchvideo.transforms import ApplyTransformToKey, ShortSideScale, UniformTemporalSubsample
+
 #from videollava.model import *
 from videollava.constants import DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN, \
     DEFAULT_VIDEO_PATCH_TOKEN, DEFAULT_VID_START_TOKEN, DEFAULT_VID_END_TOKEN
@@ -54,8 +56,8 @@ def load_pretrained_model(model_path, model_base, model_name, device_map="auto",
             if duration <= n_frames:
                 frame_id_list = list(range(duration))
             else:
-                frame_id_list = np.linspace(0, duration - 1, num_frames, dtype=int)
-            video_data = decord_vr.get_batch(frame_id_list)
+                frame_id_list = np.linspace(0, duration - 1, n_frames, dtype=int)
+            video_data = vr.get_batch(frame_id_list)
             video_data = video_data.permute(3, 0, 1, 2)
             video_data = transform(video_data) # THWC -> CTHW
             video_data = video_data.permute(1, 0, 2, 3) # CTHW -> TCHW)

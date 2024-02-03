@@ -53,7 +53,7 @@ def tokenizer_video_token(prompt, tokenizer, video_token_idx=VIDEO_TOKEN_INDEX, 
         offset = 1
         input_ids.append(prompt_chunks[0][0])
 
-    for x in insert_separator(prompt_chunks, [video_token_index] * (offset + 1)):
+    for x in insert_separator(prompt_chunks, [video_token_idx] * (offset + 1)):
         input_ids.extend(x[offset:])
 
     if return_tensors is not None:
