@@ -1,4 +1,4 @@
-import openai
+from openai import OpenAI
 import os
 import argparse
 import json
@@ -18,16 +18,15 @@ def parse_args():
     return args
 
 
-def annotate(prediction_set, caption_files, output_dir, args):
+def annotate(inp):
     """
     Evaluates question and answer pairs using GPT-3
     Returns a score for correctness.
     """
+    prediction_set, caption_files, output_dir, args = inp
     # Set the OpenAI API key.
-    openai.api_key = args.api_key
-    if args.api_base is not None:
-        openai.api_base = args.api_base
-    for file in caption_files:
+    client = OpenAI()
+    for file in tqdm(caption_files):
         key = file[:-5] # Strip file extension
         qa_set = prediction_set[key]
         question = qa_set['q']
@@ -35,8 +34,8 @@ def annotate(prediction_set, caption_files, output_dir, args):
         pred = qa_set['pred']
         try:
             # Compute the correctness score
-            completion = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+            completion = client.chat.completions.create(
+                model="gpt-3.5-turbo-1106",
                 messages=[
                     {
                         "role": "system",
@@ -64,7 +63,7 @@ def annotate(prediction_set, caption_files, output_dir, args):
                 ]
             )
             # Convert response to a Python dictionary.
-            response_message = completion["choices"][0]["message"]["content"]
+            response_message = completion.choices[0].message.content
             response_dict = ast.literal_eval(response_message)
             result_qa_pair = [response_dict, qa_set]
 
@@ -149,7 +148,7 @@ def main():
 
             # Use a pool of workers to process the files in parallel.
             with Pool() as pool:
-                pool.starmap(annotate, task_args)
+                pool.map(annotate, task_args)
 
         except Exception as e:
             print(f"Error: {e}")
