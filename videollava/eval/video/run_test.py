@@ -2,6 +2,9 @@ import math
 import os
 import argparse
 import json
+import requests
+import pandas as pd
+import io
 
 import torch
 import transformers
@@ -11,6 +14,9 @@ from videollava.constants import DEFAULT_VIDEO_TOKEN, VIDEO_TOKEN_INDEX
 from videollava.mm_utils import get_model_name_from_path, tokenizer_video_token, KeywordsStoppingCriteria
 from videollava.model.builder import load_pretrained_model
 from videollava.model.language_model.llava_llama import LlavaLlamaForCausalLM
+
+
+URL = "https://docs.google.com/spreadsheets/d/1AIwpV-VLAJ4tHKtcQXMdfTYuqwvSGn1MUSIjYC5ll0E/export?format=csv&gid={gid}"
 
 
 def split_list(lst, n):
@@ -106,60 +112,28 @@ def run_inference(args):
     tokenizer, model, processor, context_len = load_pretrained_model(args.model_path, args.model_base, model_name)
     model = model.to(args.device)
 
-    # Load both ground truth file containing questions and answers
-    # with open(args.gt_file_question) as file:
-    #     gt_questions = json.load(file)
-    # with open(args.gt_file_answers) as file:
-    #     gt_answers = json.load(file)
 
-    gt_questions = json.load(open(args.gt_file_question, "r"))
-    gt_questions = get_chunk(gt_questions, args.num_chunks, args.chunk_idx)
-    gt_answers = json.load(open(args.gt_file_answers, "r"))
-    # gt_answers = get_chunk(gt_answers, args.num_chunks, args.chunk_idx)
+    gid = "496919303"
+    videos_folder = "videos"
+    res = requests.get(url=URL.format(gid=gid))
+    assert res.status_code == 200, res.status_code
+    df = pd.read_csv(io.BytesIO(res.content))
 
-    answers_file = os.path.join(args.output_dir, f"{args.output_name}.json")
-    os.makedirs(args.output_dir, exist_ok=True)
-    ans_file = open(answers_file, "w")
-
-    # Create the output directory if it doesn't exist
-    if not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
-
-    output_list = []  # List to store the output results
-
-
-    video_formats = ['.mp4', '.avi', '.mov', '.mkv']
-
-    # Iterate over each sample in the ground truth file
+    prompts = []
+    for _, row in df.iterrows():
+        n_questions = row['Number of Questions']
+        yt_id = row['Video'].split('?v=')[-1]
+        video_path = os.path.join(videos_folder, gid, f"{yt_id}.mp4")
+        for i in range(n_questions):
+            question = row[f"Question {i + 1}"]
+            prompts.append({'id': yt_id, 'video_path': video_path, 'question': question})
+            print(prompts[-1])
+    print(f"Found {len(prompts)} prompts")
+     
     index = 0
-    for sample in tqdm(gt_questions):
-        video_name = sample['video_name']
-        question = sample['question']
-        id = sample['question_id']
-        answer = gt_answers[index]['answer']
-        index += 1
-
-        sample_set = {'id': id, 'question': question, 'answer': answer}
-
-        # Load the video file
-        for fmt in tqdm(video_formats):  # Added this line
-            temp_path = os.path.join(args.video_dir, f"{video_name}{fmt}")
-            if os.path.exists(temp_path):
-                video_path = temp_path
-                # try:
-                # Run inference on the video and add the output to the list
-                output = get_model_output(model, processor, tokenizer, video_path, question, args)
-                sample_set['pred'] = output
-                output_list.append(sample_set)
-                # except Exception as e:
-                #     print(f"Error processing video file '{video_name}': {e}")
-                ans_file.write(json.dumps(sample_set) + "\n")
-                break
-
-    ans_file.close()
-    # Save the output list to a JSON file
-    # with open(os.path.join(args.output_dir, f"{args.output_name}.json"), 'w') as file:
-    #     json.dump(output_list, file)
+    for prompt in tqdm(prompts):
+        print(prompt)
+        output = get_model_output(model, processor, tokenizer, prompt['video_path'], prompt['question'], args)
 
 
 if __name__ == "__main__":

@@ -4,6 +4,8 @@ CKPT_NAME="7b-vision-chat-ft-8k-v2-valley-videoinstruct-2"
 CKPT_NAME="7b-vision-chat-ft-32k-v2-1"
 CKPT_NAME="7b-vision-chat-ft-128k-v2-4"
 CKPT_NAME="7b-vision-chat-ft-32k-v2-valley-videoinstruct-3"
+CKPT_NAME="7b-vision-chat-ft-128k-v2-4"
+CKPT_NAME="7b-vision-chat-ft-1M-v2-valley-videoinstruct-1"
 model_path="/mnt/disks/disk-1/checkpoints/converted/${CKPT_NAME}"
 
 cache_dir="./cache_dir"
@@ -21,7 +23,7 @@ CHUNKS=${#GPULIST[@]}
 
 
 for IDX in $(seq 0 $((CHUNKS-1))); do
-  CUDA_VISIBLE_DEVICES=${GPULIST[$IDX]} python3 videollava/eval/video/run_inference_video_qa.py \
+  CUDA_VISIBLE_DEVICES=${GPULIST[$IDX]} python3 videollava/eval/video/run_test.py \
       --model_path ${model_path} \
       --cache_dir ${cache_dir} \
       --video_dir ${video_dir} \
